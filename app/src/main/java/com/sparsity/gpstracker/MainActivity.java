@@ -5,10 +5,8 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.LocationManager;
-import android.os.SystemClock;
+import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,11 +16,6 @@ import android.util.Log;
 public class MainActivity extends AppCompatActivity {
     private String TAG  = "GPStracker";
 
-    private AlarmManager alarmManager;
-    private Intent gpsTrackerIntent;
-    private PendingIntent pendingIntent;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,7 +24,6 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
 
-            // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
@@ -53,24 +45,18 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        startAlarmManager();
+        startTracking();
     }
 
 
-    private void startAlarmManager() {
-        Log.d(TAG, "startAlarmManager");
-        int intervalInMinutes = 1;
-
+    private void startTracking() {
+        Log.d(TAG, "startTracking");
 
         Context context = getBaseContext();
-        alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
-        gpsTrackerIntent = new Intent(context, GpsTrackerAlarmReceiver.class);
-        pendingIntent = PendingIntent.getBroadcast(context, 0, gpsTrackerIntent, 0);
-
-
-        alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime(),
-                intervalInMinutes * 60000, // 60000 = 1 minute
-                pendingIntent);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+            context.startForegroundService(new Intent(context, LocationService.class));
+        } else {
+            context.startService(new Intent(context, LocationService.class));
+        }
     }
 }

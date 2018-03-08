@@ -1,35 +1,24 @@
 package com.sparsity.gpstracker;
 
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.SystemClock;
+import android.os.Build;
 import android.util.Log;
 
 public class GpsTrackerBootReceiver extends BroadcastReceiver {
     private static final String TAG = "GpsTrackerBootReceiver";
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "onReceive");
+        Log.d(TAG, "onBootReceive");
 
-        AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
-        Intent gpsTrackerIntent = new Intent(context, GpsTrackerAlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, gpsTrackerIntent, 0);
-
-
-        int intervalInMinutes = 1;
-        Boolean currentlyTracking = true;
-
-        if (currentlyTracking) {
-            alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime(),
-                    intervalInMinutes * 60000, // 60000 = 1 minute,
-                    pendingIntent);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+            context.startForegroundService(new Intent(context, LocationService.class));
         } else {
-            alarmManager.cancel(pendingIntent);
+            context.startService(new Intent(context, LocationService.class));
         }
+
     }
 }
